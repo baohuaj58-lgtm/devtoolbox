@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>开发者工具箱 - DevToolBox</title>
+<meta name="description" content="在线开发者工具集合 - JSON格式化、Base64编解码、URL编解码、时间戳转换、文本对比等免费工具">
+<meta name="keywords" content="开发者工具,JSON格式化,Base64,时间戳转换,在线工具,程序员工具">
+<style>
+/* ========== Reset & Base ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0f0f1a;
+  --card: #1a1a2e;
+  --card-hover: #222240;
+  --border: #2a2a4a;
+  --text: #e0e0f0;
+  --text-dim: #8888aa;
+  --accent: #6c5ce7;
+  --accent-hover: #7c6cf7;
+  --green: #00b894;
+  --orange: #fdcb6e;
+  --red: #e17055;
+  --radius: 12px;
+  --shadow: 0 4px 20px rgba(0,0,0,.3);
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+::selection { background: var(--accent); color: #fff; }
+
+/* ========== Header ========== */
+header {
+  text-align: center;
+  padding: 40px 20px 20px;
+  border-bottom: 1px solid var(--border);
+}
+header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--accent), var(--green));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+header p { color: var(--text-dim); margin-top: 8px; font-size: 14px; }
+
+/* ========== Layout ========== */
+.container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+/* ========== Tool Card ========== */
+.tool-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: all .2s;
+}
+.tool-card:hover { border-color: var(--accent); box-shadow: var(--shadow); }
+.tool-card-header {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  transition: background .15s;
+}
+.tool-card-header:hover { background: var(--card-hover); }
+.tool-card-header .icon {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.tool-card-header .info { flex: 1; }
+.tool-card-header .info h3 { font-size: 15px; font-weight: 600; }
+.tool-card-header .info span { font-size: 12px; color: var(--text-dim); }
+.tool-card-header .arrow {
+  transition: transform .2s;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+.tool-card.open .arrow { transform: rotate(180deg); }
+.tool-card-body { display: none; padding: 0 20px 20px; }
+.tool-card.open .tool-card-body { display: block; }
+
+/* ========== Form Elements ========== */
+textarea, input[type="text"] {
+  width: 100%;
+  padding: 12px;
+  background: #0a0a15;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  font-size: 13px;
+  resize: vertical;
+  outline: none;
+  transition: border .15s;
+}
+textarea:focus, input[type="text"]:focus { border-color: var(--accent); }
+textarea { min-height: 120px; }
+.input-group { margin-bottom: 12px; }
+.input-group label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+/* ========== Buttons ========== */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s;
+  background: var(--accent);
+  color: #fff;
+}
+.btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn-green { background: var(--green); }
+.btn-green:hover { background: #00d9a5; }
+.btn-orange { background: var(--orange); color: #2d2d2d; }
+.btn-orange:hover { background: #ffe08a; }
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.btn-outline:hover { border-color: var(--accent); background: var(--card-hover); }
+.actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+
+/* ========== Result ========== */
+.result-box {
+  margin-top: 10px;
+  padding: 12px;
+  background: #0a0a15;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 13px;
+  word-break: break-all;
+  max-height: 300px;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+.result-box.error { border-color: var(--red); color: var(--red); }
+.result-box.success { border-color: var(--green); }
+
+/* ========== Status Badge ========== */
+.copy-toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--green);
+  color: #fff;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity .3s;
+  pointer-events: none;
+  z-index: 999;
+}
+.copy-toast.show { opacity: 1; }
+
+/* ========== Footer ========== */
+footer {
+  text-align: center;
+  padding: 30px 20px;
+  color: var(--text-dim);
+  font-size: 12px;
+  border-top: 1px solid var(--border);
+  margin-top: 40px;
+}
+footer a { color: var(--accent); text-decoration: none; }
+
+/* ========== Responsive ========== */
+@media (max-width: 640px) {
+  .tools-grid { grid-template-columns: 1fr; }
+  header h1 { font-size: 22px; }
+  .container { padding: 12px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🧰 开发者工具箱</h1>
+  <p>免费在线工具 · 无需安装 · 数据不上传服务器</p>
+</header>
+
+<div class="container">
+
+<!-- AdSense placeholder -->
+<div id="ad-top" style="text-align:center;margin:16px 0;min-height:90px;background:var(--card);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:13px;border:1px dashed var(--border)">
+  📢 广告位
+</div>
+
+<div class="tools-grid" id="app"></div>
+
+<!-- AdSense bottom -->
+<div id="ad-bottom" style="text-align:center;margin:20px 0;min-height:90px;background:var(--card);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:13px;border:1px dashed var(--border)">
+  📢 广告位
+</div>
+
+</div>
+
+<footer>
+  <p>DevToolBox · 本地运行，数据不上传 · 开源免费</p>
+  <p style="margin-top:4px"><a href="#">GitHub</a> · 反馈建议</p>
+</footer>
+
+<div class="copy-toast" id="toast"></div>
+
+<script>
+// ========== Utilities ==========
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+function copy(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    const toast = $('#toast');
+    toast.textContent = '✅ 已复制';
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 1500);
+  });
+}
+
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function formatJSON(str) {
+  try { return JSON.stringify(JSON.parse(str), null, 2); }
+  catch(e) { throw new Error('JSON 格式错误: ' + e.message); }
+}
+
+function formatXML(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  const formatted = div.innerHTML
+    .replace(/>\s*</g, '>\n<')
+    .replace(/</g, '  <'.slice(0,-1));
+  return formatted.trim();
+}
+
+// ========== Tool Definitions ==========
+const TOOLS = [
+  {
+    id: 'json',
+    icon: '🔷',
+    title: 'JSON 格式化',
+    desc: '美化/压缩 JSON 数据',
+    color: '#6c5ce7',
+    render(container) {
+      container.innerHTML = `
+        <div class="input-group"><label>输入 JSON</label>
+          <textarea id="json-input" placeholder='{"name":"test","list":[1,2,3]}'></textarea></div>
+        <div class="actions">
+          <button class="btn btn-sm" onclick="toolAction('json','format')">✨ 格式化</button>
+          <button class="btn btn-sm btn-green" onclick="toolAction('json','compress')">📦 压缩</button>
+          <button class="btn btn-sm btn-outline" onclick="toolAction('json','validate')">✅ 验证</button>
+        </div>
+        <div class="result-box" id="json-result"></div>`;
+    },
+    actions: {
+      format() {
+        const input = $('#json-input').value;
+        try { $('#json-result').textContent = formatJSON(input);
+          $('#json-result').className = 'result-box success'; }
+        catch(e) { $('#json-result').textContent = '❌ ' + e.message;
+          $('#json-result').className = 'result-box error'; }
+      },
+      compress() {
+        const input = $('#json-input').value;
+        try { $('#json-result').textContent = JSON.stringify(JSON.parse(input));
+          $('#json-result').className = 'result-box success'; }
+        catch(e) { $('#json-result').textContent = '❌ ' + e.message;
+          $('#json-result').className = 'result-box error'; }
+      },
+      validate() {
+        const input = $('#json-input').value;
+        try { JSON.parse(input);
+          $('#json-result').textContent = '✅ JSON 格式正确';
+          $('#json-result').className = 'result-box success'; }
+        catch(e) { $('#json-result').textContent = '❌ ' + e.message;
+          $('#json-result').className = 'result-box error'; }
+      }
+    }
+  },
+  {
+    id: 'base64',
+    icon: '🔐',
+    title: 'Base64 编解码',
+    desc: 'Base64 编码/解码',
+    color: '#00b894',
+    render(container) {
+      container.innerHTML = `
+        <div class="input-group"><label>输入文本</label>
+          <textarea id="b64-input" placeholder="输入要编码或解码的文本..."></textarea></div>
+        <div class="actions">
+          <button class="btn btn-sm" onclick="toolAction('base64','encode')">🔒 编码</button>
+          <button class="btn btn-sm btn-green" onclick="toolAction('base64','decode')">🔓 解码</button>
+          <button class="btn btn-sm btn-outline" onclick="copy(document.getElementById('b64-result').textContent.replace(/^[✅❌].*\\n?/,''))">📋 复制</button>
+        </div>
+        <div class="result-box" id="b64-result"></div>`;
+    },
+    actions: {
+      encode() {
+        const input = $('#b64-input').value;
+        try {
+          $('#b64-result').textContent = btoa(unescape(encodeURIComponent(input)));
+          $('#b64-result').className = 'result-box success';
+        } catch(e) { $('#b64-result').textContent = '❌ ' + e.message;
+          $('#b64-result').className = 'result-box error'; }
+      },
+      decode() {
+        const input = $('#b64-input').value;
+        try {
+          $('#b64-result').textContent = decodeURIComponent(escape(atob(input)));
+          $('#b64-result').className = 'result-box success';
+        } catch(e) { $('#b64-result').textContent = '❌ ' + e.message;
+          $('#b64-result').className = 'result-box error'; }
+      }
+    }
+  },
+  {
+    id: 'url',
+    icon: '🔗',
+    title: 'URL 编解码',
+    desc: 'URL 编码/解码',
+    color: '#fdcb6e',
+    render(container) {
+      container.innerHTML = `
+        <div class="input-group"><label>输入 URL 或文本</label>
+          <textarea id="url-input" placeholder="https://example.com?name=测试"></textarea></div>
+        <div class="actions">
+          <button class="btn btn-sm" onclick="toolAction('url','encode')">🔒 编码</button>
+          <button class="btn btn-sm btn-green" onclick="toolAction('url','decode')">🔓 解码</button>
+        </div>
+        <div class="result-box" id="url-result"></div>`;
+    },
+    actions: {
+      encode() {
+        $('#url-result').textContent = encodeURIComponent($('#url-input').value);
+        $('#url-result').className = 'result-box success';
+      },
+      decode() {
+        try {
+          $('#url-result').textContent = decodeURIComponent($('#url-input').value);
+          $('#url-result').className = 'result-box success';
+        } catch(e) { $('#url-result').textContent = '❌ ' + e.message;
+          $('#url-result').className = 'result-box error'; }
+      }
+    }
+  },
+  {
+    id: 'timestamp',
+    icon: '⏱️',
+    title: '时间戳转换',
+    desc: 'Unix 时间戳 ↔ 日期时间',
+    color: '#e17055',
+    render(container) {
+      container.innerHTML = `
+        <div class="input-group"><label>时间戳 (秒)</label>
+          <input type="text" id="ts-input" placeholder="1715846400"></div>
+        <div class="actions">
+          <button class="btn btn-sm" onclick="toolAction('timestamp','toDate')">📅 转日期</button>
+          <button class="btn btn-sm btn-green" onclick="toolAction('timestamp','now')">🕐 当前时间戳</button>
+        </div>
+        <div class="result-box" id="ts-result">等待操作...</div>`;
+    },
+    actions: {
+      toDate() {
+        const val = $('#ts-input').value.trim();
+        if (!val) { $('#ts-result').textContent = '❌ 请输入时间戳'; $('#ts-result').className = 'result-box error'; return; }
+        const ts = parseInt(val);
+        if (isNaN(ts)) { $('#ts-result').textContent = '❌ 无效时间戳'; $('#ts-result').className = 'result-box error'; return; }
+        const d = new Date(ts * 1000);
+        $('#ts-result').textContent = d.toLocaleString('zh-CN') + '\n' + d.toISOString();
+        $('#ts-result').className = 'result-box success';
+      },
+      now() {
+        const now = Math.floor(Date.now() / 1000);
+        $('#ts-input').value = now;
+        const d = new Date();
+        $('#ts-result').textContent = `当前时间戳: ${now}\n日期: ${d.toLocaleString('zh-CN')}\nISO: ${d.toISOString()}`;
+        $('#ts-result').className = 'result-box success';
+      }
+    }
+  },
+  {
+    id: 'hash',
+    icon: '#️⃣',
+    title: '文本 Hash',
+    desc: 'MD5 / SHA 哈希计算',
+    color: '#a29bfe',
+    render(container) {
+      container.innerHTML = `
+        <div class="input-group"><label>输入文本</label>
+          <textarea id="hash-input" placeholder="输入要计算 hash 的文本..."></textarea></div>
+        <div class="actions">
+          <button class="btn btn-sm" onclick="toolAction('hash','md5')">MD5</button>
+          <button class="btn btn-sm btn-green" onclick="toolAction('hash','sha1')">SHA-1</button>
+          <button class="btn btn-sm btn-orange" onclick="toolAction('hash','sha256')">SHA-256</button>
+        </div>
+        <div class="result-box" id="hash-result"></div>`;
+    },
+    actions: {
+      async md5() {
+        const input = $('#hash-input').value;
+        const hash = await crypto.subtle.digest('MD5', new TextEncoder().encode(input));
+        $('#hash-result').textContent = 'MD5: ' + Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+        $('#hash-result').className = 'result-box success';
+      },
+      async sha1() {
+        const input = $('#hash-input').value;
+        const hash = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(input));
+        $('#hash-result').textContent = 'SHA-1: ' + Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+        $('#hash-result').className = 'result-box success';
+      },
+      async sha256() {
+        const input = $('#hash-input').value;
+        const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
+        $('#hash-result').textContent = 'SHA-256: ' + Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+        $('#hash-result').className = 'result-box success';
+      }
+    }
+  },
+  {
+    id: 'regex',
+    icon: '🔍',
+    title: '正则测试器',
+    desc: '在线测试正则表达式',
+    color: '#fd79a8',
+    render(container) {
+      container.innerHTML = `
+        <div class="input-group"><label>正则表达式</label>
+          <input type="text" id="regex-pattern" placeholder="\\\\d+"></div>
+        <div class="input-group"><label>测试文本</label>
+          <textarea id="regex-text" placeholder="要匹配的文本..."></textarea></div>
+        <div class="input-group"><label>修饰符</label>
+          <input type="text" id="regex-flags" placeholder="gi" value="g"></div>
+        <div class="actions">
+          <button class="btn btn-sm" onclick="toolAction('regex','test')">🔍 测试</button>
+        </div>
+        <div class="result-box" id="regex-result"></div>`;
+    },
+    actions: {
+      test() {
+        const pattern = $('#regex-pattern').value;
+        const text = $('#regex-text').value;
+        const flags = $('#regex-flags').value;
+        try {
+          const re = new RegExp(pattern, flags);
+          const matches = [...text.matchAll(re)];
+          if (matches.length === 0) {
+            $('#regex-result').textContent = '未找到匹配';
+            $('#regex-result').className = 'result-box error';
+          } else {
+            let result = `✅ 找到 ${matches.length} 个匹配:\n\n`;
+            matches.forEach((m, i) => {
+              result += `[${i}] ${m[0]}` + (m.length > 1 ? ` (捕获: ${m.slice(1).join(', ')})` : '') + '\n';
+            });
+            $('#regex-result').textContent = result;
+            $('#regex-result').className = 'result-box success';
+          }
+        } catch(e) {
+          $('#regex-result').textContent = '❌ ' + e.message;
+          $('#regex-result').className = 'result-box error';
+        }
+      }
+    }
+  },
+  {
+    id: 'diff',
+    icon: '📊',
+    title: '文本对比',
+    desc: '对比两段文本差异',
+    color: '#00cec9',
+    render(container) {
+      container.innerHTML = `
+        <div class="input-group"><label>文本 A (原版)</label>
+          <textarea id="diff-a" placeholder="原始文本..."></textarea></div>
+        <div class="input-group"><label>文本 B (新版)</label>
+          <textarea id="diff-b" placeholder="新文本..."></textarea></div>
+        <div class="actions">
+          <button class="btn btn-sm" onclick="toolAction('diff','compare')">📊 对比</button>
+        </div>
+        <div class="result-box" id="diff-result"></div>`;
+    },
+    actions: {
+      compare() {
+        const a = $('#diff-a').value;
+        const b = $('#diff-b').value;
+        const linesA = a.split('\n');
+        const linesB = b.split('\n');
+        let result = '';
+        const maxLen = Math.max(linesA.length, linesB.length);
+        for (let i = 0; i < maxLen; i++) {
+          const la = i < linesA.length ? linesA[i] : '(无)';
+          const lb = i < linesB.length ? linesB[i] : '(无)';
+          if (la === lb) continue;
+          result += `行 ${i+1}:\n  - ${la}\n  + ${lb}\n\n`;
+        }
+        if (!result) {
+          $('#diff-result').textContent = '✅ 两段文本完全一致';
+          $('#diff-result').className = 'result-box success';
+        } else {
+          $('#diff-result').textContent = '差异:\n' + result;
+          $('#diff-result').className = 'result-box';
+        }
+      }
+    }
+  },
+  {
+    id: 'uuid',
+    icon: '🆔',
+    title: 'UUID 生成器',
+    desc: '生成随机 UUID / GUID',
+    color: '#636e72',
+    render(container) {
+      container.innerHTML = `
+        <div class="actions" style="margin-bottom:10px">
+          <button class="btn btn-sm" onclick="toolAction('uuid','gen')">🎲 生成</button>
+          <button class="btn btn-sm btn-green" onclick="toolAction('uuid','gen5')">🔢 生成5个</button>
+        </div>
+        <div class="result-box" id="uuid-result"></div>`;
+    },
+    actions: {
+      gen() {
+        const uuid = crypto.randomUUID();
+        $('#uuid-result').textContent = uuid;
+        $('#uuid-result').className = 'result-box success';
+      },
+      gen5() {
+        const uuids = Array.from({length:5}, () => crypto.randomUUID()).join('\n');
+        $('#uuid-result').textContent = uuids;
+        $('#uuid-result').className = 'result-box success';
+      }
+    }
+  },
+];
+
+// ========== Render App ==========
+function renderTools() {
+  const app = $('#app');
+  app.innerHTML = '';
+  TOOLS.forEach(t => {
+    const card = document.createElement('div');
+    card.className = 'tool-card';
+    card.id = 'card-' + t.id;
+    card.innerHTML = `
+      <div class="tool-card-header" onclick="toggleCard('${t.id}')">
+        <div class="icon" style="background:${t.color}22;color:${t.color}">${t.icon}</div>
+        <div class="info"><h3>${t.title}</h3><span>${t.desc}</span></div>
+        <div class="arrow">▼</div>
+      </div>
+      <div class="tool-card-body" id="body-${t.id}"></div>`;
+    app.appendChild(card);
+    t.render(document.getElementById('body-' + t.id));
+  });
+}
+
+function toggleCard(id) {
+  const card = document.getElementById('card-' + id);
+  card.classList.toggle('open');
+}
+
+function toolAction(toolId, action) {
+  const tool = TOOLS.find(t => t.id === toolId);
+  if (tool && tool.actions && tool.actions[action]) {
+    tool.actions[action]();
+    // 自动展开卡片
+    const card = document.getElementById('card-' + toolId);
+    if (!card.classList.contains('open')) card.classList.add('open');
+  }
+}
+
+// ========== Init ==========
+document.addEventListener('DOMContentLoaded', renderTools);
+</script>
+</body>
+</html>
